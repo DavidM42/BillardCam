@@ -1,0 +1,5 @@
+configuration = {
+    api_key = 'XXXXXXXX'
+    stream_key = 'live_XXXXXXXX'
+    stream_start_file = 'streaming_og.sh'
+}
