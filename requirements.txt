@@ -1,1 +1,3 @@
+picamera
 flask
+Flask-OAuthlib

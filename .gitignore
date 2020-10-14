@@ -1,4 +1,5 @@
 config.py
+shots/*.mp4
 
 venv/
 *.pyc
