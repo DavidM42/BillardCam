@@ -1,6 +1,6 @@
 from flask import Flask, redirect, url_for, jsonify, request
 import os
-from stream_process_control import start_streaming,stop_streaming
+from streaming.stream_process_control import start_streaming,stop_streaming
 import atexit
 import shlex
 from config import configuration
@@ -24,9 +24,14 @@ app = Flask(__name__)
 
 abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
 
-streaming_start_command = abs_dirname + stream_start_file + " " + stream_key
+
+
+# streaming paths and commands
+abs_streaming_dir_path = abs_dirname + "streaming/"
+streaming_start_command = abs_streaming_dir_path + stream_start_file + " " + stream_key
 streaming_start_command = shlex.split(streaming_start_command)
 
+# global var to indicate if stream is running
 running_stream_process = False
 
 # TODO html render website
