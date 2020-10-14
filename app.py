@@ -7,9 +7,9 @@ from config import configuration
 
 
 ###### CONFIGURATION LOADING ##########
-api_key = configuration.api_key
-stream_key = configuration.stream_key
-stream_start_file = configuration.stream_start_file
+api_key = configuration["api_key"]
+stream_key = configuration["stream_key"]
+stream_start_file = configuration["stream_start_file"]
 
 class ConfigrationException(Exception):
     pass
@@ -25,7 +25,7 @@ app = Flask(__name__)
 abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 streaming_start_command = abs_dirname + stream_start_file + " " + stream_key
-streaming_start_command = shlex.split(streaming_start_shell_script)
+streaming_start_command = shlex.split(streaming_start_command)
 
 running_stream_process = False
 

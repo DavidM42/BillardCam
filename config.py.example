@@ -1,5 +1,5 @@
 configuration = {
-    api_key = 'XXXXXXXX'
-    stream_key = 'live_XXXXXXXX'
-    stream_start_file = 'streaming_og.sh'
+    'api_key': 'XXXXXXXX', #Your own api_key to restrict api usage
+    'stream_key': 'live_XXXXXXXX', # stream key for twitch
+    'stream_start_file': 'streaming_og.sh'
 }
