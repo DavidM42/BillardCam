@@ -203,4 +203,5 @@ if __name__ == "__main__":
     atexit.register(exit_handler)
 
     local_record_p = start_local_recording(local_record_p, save_local_clip)
+    # TODO make port config var
     app.run(debug=True, port=8888, host="0.0.0.0", use_reloader=False)

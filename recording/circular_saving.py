@@ -17,7 +17,7 @@ def record_loop(save_video):
     # methods of this file in main always running flask thread
     camera = picamera.PiCamera(resolution=(1920,1080))
     # TODO configurable clip length in config.py
-    stream = picamera.PiCameraCircularIO(camera, seconds=20)
+    stream = picamera.PiCameraCircularIO(camera, seconds=25)
     camera.start_recording(stream, format='h264')
 
     try:
@@ -27,7 +27,7 @@ def record_loop(save_video):
                 print("Will save video clip locally now...")
                 # Keep recording for 5 seconds and only then write the
                 # stream to disk
-                camera.wait_recording(5)
+                camera.wait_recording(3)
                 stream.copy_to(stream_save)
                 
                 # UTC to ISO 8601 with Local TimeZone information without microsecond  from https://stackoverflow.com/a/28147286
