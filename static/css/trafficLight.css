@@ -1,0 +1,126 @@
+/* straight up copied all styles from my sneak project for now
+ to get it up and running quickly */
+
+span.trafficText {
+    top: 50%;
+    font-size: 1.5em;
+}
+
+/* following adapted from https://codepen.io/dervondenbergen/pen/jCqzl */
+/* extracted styling from inline css after editing in codepen */
+input.traffic {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    width: 40px;
+    height: 40px;
+    vertical-align: middle;
+    border-radius: 100%;
+    display: inline-block;
+    margin-bottom: 10px;
+    }
+    input.disconnected {
+        background-color: #b30000;
+    }
+    input.disconnected:hover {
+        animation: blinkDisconnected 1.1s step-end infinite;
+    }
+    input.disconnected:checked {
+        background-color: #FF0000;
+        box-shadow: 0 0 6em #ff3333;
+    }
+    input.ready {
+        background-color: #00b300;
+    }
+    input.ready:hover {
+        animation: blinkReady 1.1s step-end infinite;
+    }
+    input.ready:checked {
+        background-color: #00FF00;
+        box-shadow: 0 0 6em #33ff33;
+    }
+    @keyframes blinkDisconnected {
+        0% {
+        background-color: #FF0000;
+        box-shadow: 0 0 6em #ff3333;
+        }
+        50% {
+        background-color: #b30000;
+        box-shadow: 0 0 0em transparent;
+        }
+    }
+    @keyframes blinkReady {
+        0% {
+        background-color: #00FF00;
+        box-shadow: 0 0 6em #33ff33;
+        }
+        50% {
+        background-color: #00b300;
+        box-shadow: 0 0 0em transparent;
+        }
+}
+/* uncompiled less source code:
+
+//light colors
+@disconnected: #FF0000;//red
+@ready: #00FF00;//green
+
+input.traffic {
+    //remove default style
+    appearance: none;
+    //make the traffic lights appear
+    position: relative;
+    left: 50%;
+    width:40px;
+    height:40px;
+    margin-top: 20px;
+    margin-left:-40px;
+    background-color: grey;
+    vertical-align: middle;
+    border-radius: 100%;
+    display: block;
+    &.disconnected {
+        background-color: darken(@disconnected,15%);
+        &:hover {
+        animation: blinkDisconnected 1.1s step-end infinite;
+        }
+        &:checked {
+        background-color: @disconnected;
+        box-shadow: 0 0 6em lighten(@disconnected,10%);
+        }
+    };
+    &.ready {
+        background-color: darken(@ready,15%);
+        &:hover {
+        animation: blinkReady 1.1s step-end infinite;
+        }
+        &:checked {
+        background-color: @ready;
+        box-shadow: 0 0 6em lighten(@ready,10%);
+        }
+    }
+}
+
+@keyframes blinkDisconnected {
+    0% {
+        background-color: @disconnected;
+        box-shadow: 0 0 6em lighten(@disconnected,10%);
+    }
+    
+    50% {
+        background-color: darken(@disconnected,15%);
+        box-shadow: 0 0 0em transparent;
+    }
+}
+
+@keyframes blinkReady {
+    0% {
+        background-color: @ready;
+        box-shadow: 0 0 6em lighten(@ready,10%);
+    }
+
+    50% {
+        background-color: darken(@ready,15%);
+        box-shadow: 0 0 0em transparent;
+    }
+}
+*/

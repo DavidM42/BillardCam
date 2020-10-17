@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block extraCSS %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/ghostButton.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/trafficLight.css') }}">
+{% endblock %}
+
+{% block extraJS %}
+        <script src="{{ url_for('static', filename='js/startSlider.js') }}"> </script>
+        <script src="{{ url_for('static', filename='js/trafficLight.js') }}"> </script>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="headline centeredText" id="headline">
+        Billard Video Steuerung
+</h1>
+
+<!-- <p class="centeredText queue">Filme in der Warteschlange übrig: {{options_left}}</p> -->
+
+<div class="centeredText">
+        <span>
+        {% if is_stream_running %}
+                <input type="radio" name="traffic-light" id="traffic-light" class="traffic ready"/>
+                <span class="trafficText">Stream läuft</span>
+        {% else %}
+                <input type="radio" name="traffic-light" id="traffic-light" class="traffic disconnected"/>
+                <span class="trafficText">Stream läuft nicht</span>
+        {% endif %}
+        </span>
+</div>
+
+<!-- TODO login logout button via session -->
+
+{% if not is_stream_running %}
+    <a class="btn-ghost btn-bright" href=" {{ url_for('start_stream')}}">
+            <!-- TODO confirmation if really sure and not reversible -->
+            <i class="fas fa-satellite-dish"></i> Starte Stream
+    </a>
+{% else %}
+    <a class="btn-ghost btn-bright" href=" {{ url_for('stop_stream')}}">
+        <!-- TODO confirmation if really sure and not reversible -->
+        <i class="fas fa-power-off"></i> Stop stream
+    </a>
+{% endif %}
+<br>
+
+<a class="btn-ghost btn-bright" href=" {{ url_for('clip_it')}}">
+    <i class="fas fa-video"></i> Clip den Schuss
+</a>
+<br>
+
+<a class="btn-ghost btn-bright" href=" {{ url_for('logout')}}">
+    <i class="fas fa-sign-out-alt"></i> Logout
+</a>
+<br>
+
+{% endblock %}

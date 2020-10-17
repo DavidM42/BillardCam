@@ -1,0 +1,82 @@
+/* straight up copied all styles from my sneak project for now
+ to get it up and running quickly */
+
+body {
+    /* background: rgb(51,51,51); */
+    /* background: linear-gradient(90deg, rgba(51,51,51,0.8729692560617998) 0%, rgba(51,51,51,0.8981793400954132) 42%, rgba(51,51,51,1) 100%);  */
+    background: #023880;
+    color: #fff;
+    font-family: 'Roboto', sans-serif !important;
+}
+
+#headline {
+    margin-top: 70px;
+}
+
+.voteicon {
+    max-width: 80vw;
+    max-height: 25vh;
+
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2vh;
+    /* filter: invert(1); */
+}
+
+div.voteBox {
+    width: 100vw;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-right: 0px;
+    margin-left: 0px;
+    height: 33vh;
+}
+
+div.whiteBox {
+    background-color: #333;
+}
+
+div.blueBox {
+    background-color: #023880;
+}
+
+.onColorBgIcon {
+    filter: invert(1);
+}
+
+.onOtherBgIcon {
+    filter: invert(1);
+}
+
+.centeredText {
+    text-align:center; 
+}
+
+.splitLine {
+    width: 100%;
+}
+
+/* TODO remove is just for testing */
+.control-links {
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+a.control-links {
+    color: #FFFFFFFF !important;
+}
+
+p.queue {
+    font-size: 1.35em;
+}
+
+div.availabilityLight {
+    position: relative;
+    top: 20%;
+}
+
+/* div.contentBox {
+    margin-left:auto;
+    margin-right:auto;
+} */

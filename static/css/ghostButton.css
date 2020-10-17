@@ -1,0 +1,101 @@
+/* straight up copied all styles from my sneak project for now
+ to get it up and running quickly */
+
+/* mostly from https://codepen.io/jaevernonaquino/pen/KwPoaP */
+
+
+*, *:after, *:before {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 70%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    margin-top: -50px;
+}
+
+h1.headline {
+    position: relative;
+    top: 25%;
+    font-size: 3.4em;
+    color: rgb(192, 189, 189);
+}
+
+/* buttons */   
+
+.btn-align {
+    position: relative;
+    top: 45%;
+}
+
+.btn-ghost {
+    border-radius: 4px;
+    display: block;
+    width: 340px;
+    width: 34rem;
+    height: 66px;
+    height: 6.6rem;
+    font: 700 20px/66px "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 2.0rem/6.6rem;
+    letter-spacing: 0.01rem;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: all .16s ease;
+    margin: 0 auto;
+}
+
+.btn-dark {
+    color: #023880;
+    border: 2px solid #023880;
+}
+
+.btn-dark:hover {
+     /*, .btn-dark:active, .btn-dark:focus   */
+    color: rgb(192, 189, 189);
+    background-color: #023880;
+    border: 2px solid #023880;
+}
+
+.btn-bright {
+    color: rgb(192, 189, 189);
+    border: 2px solid rgb(192, 189, 189);
+}
+
+.btn-bright:hover {
+    /* , .btn-bright:active, .btn-bright:focus  */
+    color: #023880;
+    background-color: rgb(192, 189, 189);
+    border: 2px solid rgb(192, 189, 189);
+}
+
+@media screen and (max-width: 420px) {
+    /* iPhone Landscape */
+    .btn-ghost {
+        width: 290px;
+        width: 29.0rem;
+        height: 50px;
+        height: 5.0rem;
+        font-size: 16px;
+        font-size: 1.6rem;
+        line-height: 50px;
+        line-height: 5.0rem;
+    }
+}
+
+/* Backgrounds */
+
+div#bg-dark {
+    background-color: #023880;
+    height: 55vh;
+}
+
+div#bg-bright {
+    /* background-color: rgb(201, 201, 201); */
+    background-color: rgb(114, 114, 114);
+    height: 55vh;
+}

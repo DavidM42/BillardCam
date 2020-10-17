@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, jsonify, request, session
+from flask import Flask, redirect, url_for, jsonify, request, session, render_template
 from flask_oauthlib.client import OAuth
 from functools import wraps
 import os
@@ -135,12 +135,16 @@ def restricted(f):
 # TODO html render website
 @app.route("/")
 def index():
-    return "ok"
-
+    if 'twitch_token' in session:
+        twitch_token = session["twitch_token"]
+        if twitch_api.get_user_info(twitch_token)["data"][0]["id"] == twitch_api.broadcaster_id:
+            return render_template('index.html', is_stream_running=running_stream_process) 
+        return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in NOT any other one"}), 401
+    return redirect(url_for('login'))
 
 @app.route("/startStream")
 @restricted
-def startStream():
+def start_stream():
     global running_stream_process
     global local_record_p
 
@@ -155,7 +159,7 @@ def startStream():
 
 @app.route("/stopStream")
 @restricted
-def stopStream():
+def stop_stream():
     global running_stream_process
     global local_record_p
     global save_local_clip
@@ -171,7 +175,7 @@ def stopStream():
 
 @app.route("/clipit")
 @restricted
-def clipit():
+def clip_it():
     global running_stream_process
     global save_local_clip
 
