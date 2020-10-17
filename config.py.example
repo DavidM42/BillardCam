@@ -1,5 +1,11 @@
 configuration = {
-    'api_key': 'XXXXXXXX', #Your own api_key to restrict api usage
-    'stream_key': 'live_XXXXXXXX', # stream key for twitch
-    'stream_start_file': 'streaming_og.sh'
+    # config to stream content to twitch 
+    'api_key' : 'XXXXXXXX', #Your own api_key to restrict api usage
+    'stream_key' : 'live_XXXXXXXX', # stream key for twitch
+    'stream_start_file' : 'streaming_og.sh',
+
+    # config for twitch api to clip
+    'client_id' : 'XXXXXXX',
+    'client_secret' : 'XXXXXX',
+    'broadcaster_id' : '123456789'
 }
