@@ -1,5 +1,6 @@
 config.py
 shots/*.mp4
+twitchApi/tokens.json
 
 venv/
 *.pyc

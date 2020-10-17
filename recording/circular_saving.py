@@ -15,9 +15,9 @@ def record_loop(save_video):
 
     # only initialize cam in function so that it does not already block just by importing
     # methods of this file in main always running flask thread
-    camera = picamera.PiCamera()
+    camera = picamera.PiCamera(resolution=(1920,1080))
     # TODO configurable clip length in config.py
-    stream = picamera.PiCameraCircularIO(camera, seconds=10)
+    stream = picamera.PiCameraCircularIO(camera, seconds=20)
     camera.start_recording(stream, format='h264')
 
     try:

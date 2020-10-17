@@ -9,3 +9,8 @@ TODO write up
 3. Install requirements.txt via `pip install -r ./requirements.txt`
 4. Copy `config.py.example` to `config.py` and enter your twitch stream and api_key
 5. Run dev flask server via `python ./app.py`
+
+
+## Security
+This app *saves unencrypted access key to your broadcaster twitch account to disk*. This is a security risk.
+Only install on machines you and only you fully control be aware of this risk.
