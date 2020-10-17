@@ -5,6 +5,7 @@ import signal
 # TODO function docs
 def start_streaming(streaming_start_command):
     print("Starting streaming...")
+    # TODO make configurable wether with or without mic and if with internet radio music
     return subprocess.Popen(streaming_start_command, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
 def stop_streaming(stream_process):
