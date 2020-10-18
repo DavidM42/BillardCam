@@ -78,6 +78,7 @@ running_stream_process = False
 # global var containing process to record locally
 # get's termianted for streaming
 local_record_p = None
+stream_multi_p = None
 
 # global var to indicate if a local clip should be created
 # use Value class here because shared memory 'b' binary value 
@@ -137,7 +138,11 @@ def restricted(f):
 def index():
     if 'twitch_token' in session:
         twitch_token = session["twitch_token"]
-        if twitch_api.get_user_info(twitch_token)["data"][0]["id"] == twitch_api.broadcaster_id:
+        response = twitch_api.get_user_info(twitch_token)
+        print(twitch_token)
+        print(response)
+        #TODO if response {'error': 'Unauthorized', 'status': 401, 'message': 'Invalid OAuth token'} then refresh toke with refresh or relogin
+        if response["data"][0]["id"] == twitch_api.broadcaster_id:
             return render_template('index.html', is_stream_running=running_stream_process) 
         return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in NOT any other one"}), 401
     return redirect(url_for('login'))
@@ -147,12 +152,14 @@ def index():
 def start_stream():
     global running_stream_process
     global local_record_p
+    global stream_multi_p
 
     if not running_stream_process:
         # stop local recording and start livestreaming
         local_record_p = stop_local_recording(local_record_p)
         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-        running_stream_process = start_streaming(streaming_start_command)
+        stream_multi_p = start_streaming(stream_multi_p, streaming_start_command)
+        running_stream_process = True
         return jsonify({"status": "Done"})
     else:
         return jsonify({"status": "error", "message": "Already streaming"}), 400
@@ -163,9 +170,10 @@ def stop_stream():
     global running_stream_process
     global local_record_p
     global save_local_clip
+    global stream_multi_p
 
     if running_stream_process:
-        stop_streaming(running_stream_process)
+        stop_streaming(stream_multi_p)
         running_stream_process = False
         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
         local_record_p = start_local_recording(local_record_p, save_local_clip)
@@ -194,7 +202,7 @@ def exit_handler():
     # always make a clean exit and terminate both streaming and local recording processes
     if running_stream_process:
         # always stop streaming if file ends (and power is not cut...)
-        stop_streaming(running_stream_process)
+        stop_streaming(stream_multi_p)
     else:
         # else stop local recording
         stop_local_recording(local_record_p)
