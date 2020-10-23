@@ -81,7 +81,9 @@ twitch_api = TwitchApi(client_id, client_secret, twitch.base_url , broadcaster_i
 abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 abs_streaming_dir_path = abs_dirname + "streaming/"
-streaming_start_command = abs_streaming_dir_path + stream_start_file + " " + stream_key
+#  appends stream key and also mutes all output and puts into bg to not fill up buffer and hang see https://stackoverflow.com/a/16527559
+# also stop output in stream_optim.sh and in stream process control subprocess open definition
+streaming_start_command = abs_streaming_dir_path + stream_start_file + " " + stream_key # + ' > /dev/null 2>&1 < /dev/null' # was experiment to pipe stdin from stackoverflow to avoid hangups of ffmpeg
 streaming_start_command = shlex.split(streaming_start_command)
 
 ############ Global Vars ############

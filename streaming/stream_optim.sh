@@ -56,10 +56,14 @@ KEY=$1
 #     -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 128k -b:v $BITRATE -preset ultrafast -f flv "${URL}/${KEY}"
 
 # combined mic version with some tweaks from og and so on
+# no stdin and loglevel error are VERY important in ensuring possiblity and stability in bg process not filling up buffer from https://stackoverflow.com/a/47114881 and not suspending because of missing tty in
+# this versio has no status output and no dynamic input and reconnect arguments to be best in bg tasks of python service
 raspivid -n -o - -t 0 -w $WIDTH -h $HEIGHT -fps $FRAMERATE -b $BITRATE -g $KEYFRAME | ffmpeg -use_wallclock_as_timestamps 1 \
-    -thread_queue_size 10240 -f h264 -r 30 -i - \
-    -f alsa -thread_queue_size 10240 -ac 2 -itsoffset $OFFSET -i $INPUT -strict experimental -threads 3 \
-    -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 128k -f flv "${URL}/${KEY}" > /home/pi/ffmpeg.log
+    -nostdin -loglevel error \
+    -thread_queue_size 20480 -f h264 -r 30 -i - \
+    -f alsa -thread_queue_size 20480 -ac 2 -itsoffset $OFFSET -i $INPUT -strict experimental -threads 4 \
+    -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 128k -f flv "${URL}/${KEY}" \
+    -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 15  # don_t break connection on spotty internet but keep and reconnect
 
 # =================================================================
 # Full Documentation of Command Options
