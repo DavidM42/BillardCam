@@ -1,0 +1,2 @@
+pkill ffmpeg
+pkill raspivid

@@ -82,7 +82,10 @@ abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 abs_streaming_dir_path = abs_dirname + "streaming/"
 streaming_start_command = abs_streaming_dir_path + stream_start_file + " " + stream_key
-streaming_start_command = shlex.split(streaming_start_command)
+
+stream_stop_file = "pkill_processes.sh"
+streaming_stop_command = abs_streaming_dir_path + stream_stop_file
+# streaming_start_command = shlex.split(streaming_start_command)
 
 ############ Global Vars ############
 # global var containing process to record locally
@@ -171,7 +174,7 @@ def start_stream():
         # stop local recording and start livestreaming
         local_record_p = stop_local_recording(local_record_p)
         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-        stream_multi_p = start_streaming(stream_multi_p, streaming_start_command)
+        stream_multi_p = start_streaming(streaming_start_command)
         current_mode = VideoModes.STREAMING
         return jsonify({"status": "Done"})
     else:
@@ -186,7 +189,7 @@ def stop_stream():
     global stream_multi_p
 
     if current_mode == VideoModes.STREAMING:
-        stop_streaming(stream_multi_p)
+        stop_streaming()
         current_mode = VideoModes.SHADOWPLAY
         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
         local_record_p = start_local_recording(local_record_p, save_local_clip)
@@ -253,7 +256,7 @@ def exit_handler():
     # always make a clean exit and terminate both streaming and local recording processes
     if current_mode == VideoModes.STREAMING:
         # always stop streaming if file ends (and power is not cut...)
-        stop_streaming(stream_multi_p)
+        stop_streaming()
     elif current_mode == VideoModes.SHADOWPLAY:
         # else stop local recording
         stop_local_recording(local_record_p)
