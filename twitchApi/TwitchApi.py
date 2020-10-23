@@ -95,7 +95,12 @@ class TwitchApi():
             "&client_secret" + urlencode(self.client_secret)
         )
         if r.status_code == 200:
-            return json.loads(r.text)["access_token"]
+            access_token = json.loads(r.text)["access_token"]
+            if access_token is not None:
+                self.access_token = access_token
+                save_tokens()
+                return self.access_token
+        
         return None       
 
     def get_user_info(self, token) -> dict:

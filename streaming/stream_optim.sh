@@ -20,7 +20,9 @@
 
 # Set width and height of output video
 WIDTH=1920
+# WIDTH=1280
 HEIGHT=1080
+# HEIGHT=720
 
 # Set output framerate
 FRAMERATE=30
@@ -33,7 +35,7 @@ BITRATE=3000000
 
 # Set video offset
 # OFFSET=0.5
-OFFSET=-0.25
+OFFSET=1.1
 
 # Set Audio input (check using "arecord -l")
 INPUT=plughw:CameraB409241,0
@@ -55,9 +57,9 @@ KEY=$1
 
 # combined mic version with some tweaks from og and so on
 raspivid -n -o - -t 0 -w $WIDTH -h $HEIGHT -fps $FRAMERATE -b $BITRATE -g $KEYFRAME | ffmpeg -use_wallclock_as_timestamps 1 \
-    -thread_queue_size 10240 -f h264 -r 30 -i - -itsoffset $OFFSET \
-    -f alsa -thread_queue_size 10240 -ac 2 -i $INPUT -strict experimental -threads 4 \
-    -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 192k -f flv "${URL}/${KEY}"
+    -thread_queue_size 10240 -f h264 -r 30 -i - \
+    -f alsa -thread_queue_size 10240 -ac 2 -itsoffset $OFFSET -i $INPUT -strict experimental -threads 3 \
+    -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 128k -f flv "${URL}/${KEY}" > /home/pi/ffmpeg.log
 
 # =================================================================
 # Full Documentation of Command Options
