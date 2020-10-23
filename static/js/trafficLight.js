@@ -1,6 +1,6 @@
 
 window.onload = () => {
-    document.getElementById('traffic-light').onclick = () => {
+    document.querySelectorAll('.traffic').forEach((e) => e.onclick = () => {
         window.location.reload(true);
-    };
+    });
 };

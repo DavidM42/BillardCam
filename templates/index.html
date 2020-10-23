@@ -22,11 +22,23 @@
 <div class="centeredText">
         <span>
         {% if is_stream_running %}
-                <input type="radio" name="traffic-light" id="traffic-light" class="traffic ready"/>
+                <input type="radio" name="traffic-light" class="traffic ready"/>
                 <span class="trafficText">Stream läuft</span>
         {% else %}
-                <input type="radio" name="traffic-light" id="traffic-light" class="traffic disconnected"/>
+                <input type="radio" name="traffic-light" class="traffic disconnected"/>
                 <span class="trafficText">Stream läuft nicht</span>
+        {% endif %}
+        </span>
+</div>
+
+<div class="centeredText">
+        <span>
+        {% if is_data_collection_running %}
+                <input type="radio" name="traffic-light" class="traffic ready"/>
+                <span class="trafficText">Datensammlung läuft</span>
+        {% else %}
+                <input type="radio" name="traffic-light" class="traffic disconnected"/>
+                <span class="trafficText">Datensammlung läuft nicht</span>
         {% endif %}
         </span>
 </div>
@@ -50,6 +62,21 @@
     <i class="fas fa-video"></i> Clip den Schuss
 </a>
 <br>
+
+<!-- Only allow data collection if stream is off -->
+{% if not is_stream_running %}
+        {% if not is_data_collection_running %}
+        <a class="btn-ghost btn-bright" href=" {{ url_for('start_data_collection')}}">
+                <i class="fas fa-camera"></i> Starte Data Collection
+        </a>
+        {% else %}
+        <a class="btn-ghost btn-bright" href=" {{ url_for('stop_data_collection')}}">
+                <i class="fas fa-power-off"></i> Stop Data Collection
+        </a>
+        {% endif %}
+        <br>
+{% endif %}
+
 
 <a class="btn-ghost btn-bright" href=" {{ url_for('logout')}}">
     <i class="fas fa-sign-out-alt"></i> Logout

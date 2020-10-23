@@ -27,7 +27,7 @@ class TwitchApi():
                 "refresh_token": self.refresh_token
             }
 
-            with open(FILE_PATH, 'w+') as outfile:
+            with open(FILE_PATH, 'w') as outfile:
                 json.dump(data, outfile)
         
     def read_tokens(self):
@@ -72,8 +72,8 @@ class TwitchApi():
                 return True
         return False
 
-    def validate_access_token(self) -> bool:
-        headers = {'Authorization': "OAuth " + self.access_token }# "client-id" in header is important else fails
+    def validate_access_token(self, token) -> bool:
+        headers = {'Authorization': "OAuth " + token }# "client-id" in header is important else fails
         r = requests.get("https://id.twitch.tv/oauth2/validate", headers=headers)
 
         # use raise for status here not manual check 
@@ -83,33 +83,40 @@ class TwitchApi():
             return True
 
     def revoke_token(self, token: str) -> bool:
-        r = requests.post("https://id.twitch.tv/oauth2/revoke?client_id=" + urlencode(self.client_id) + "&token=" + urlencode(token))
+        r = requests.post("https://id.twitch.tv/oauth2/revoke", data=
+        {
+            "client_id": self.client_id,
+            "token": token
+        })
         if r.status_code == 200:
             return True
         return False
 
-    def refresh_token(self) -> str:
-        r = requests.post("https://id.twitch.tv/oauth2/token?grant_type=refresh_token" +
-            "&refresh_token=" + urlencode(self.refresh_token) +
-            "&client_id" + urlencode(self.client_id) +
-            "&client_secret" + urlencode(self.client_secret)
+    def refresh_access_token(self) -> str:
+        r = requests.post("https://id.twitch.tv/oauth2/token",
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": self.refresh_token,
+                "client_id": self.client_id,
+                "client_secret": self.client_secret
+            }
         )
         if r.status_code == 200:
             access_token = json.loads(r.text)["access_token"]
             if access_token is not None:
                 self.access_token = access_token
-                save_tokens()
+                self.save_tokens()
                 return self.access_token
         
         return None       
 
     def get_user_info(self, token) -> dict:
         # if token became invalid try to refresh it
-        if not self.validate_access_token():
-            self.refresh_token()
-
         if token is None:
             token = self.access_token
+
+        if not self.validate_access_token(token):
+            token = self.refresh_access_token()
 
         headers = {'Authorization': ("Bearer " + token), 'client-id': self.client_id}# "client-id" in header is important else fails
         r = requests.get(self.twitch_base_url + "users", headers=headers)
@@ -117,8 +124,8 @@ class TwitchApi():
 
     def create_clip(self) -> dict:
         # if token became invalid try to refresh it
-        if not self.validate_access_token():
-            self.refresh_token()
+        if not self.validate_access_token(self.access_token):
+            self.refresh_access_token()
 
         headers = {'Authorization': ("Bearer " + self.access_token), 'client-id': self.client_id } # "client-id" in header is important else fails
         r = requests.post(self.twitch_base_url + "clips?broadcaster_id=" + self.broadcaster_id, headers=headers)
