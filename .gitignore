@@ -3,8 +3,9 @@ twitchApi/tokens.json
 
 shots/*.mp4
 imageStates/**.jpg
-imageStates/**.jpeg
 imageStates/**.png
+imageStates/annotated/**.jpg
+imageStates/annotated/**.png
 
 venv/
 *.pyc
