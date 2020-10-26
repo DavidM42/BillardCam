@@ -39,7 +39,7 @@ OFFSET=-0.25
 INPUT=plughw:CameraB409241,0
 
 # Set stream URL
-URL=rtmp://live-fra02.twitch.tv/app/
+URL=rtmp://live-fra02.twitch.tv/app
 
 # Set stream key
 KEY=$1

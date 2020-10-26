@@ -41,7 +41,7 @@ INPUT="http://relay.publicdomainradio.org:80/jazz_swing.mp3"
 # m3u file you download contains the real stream url which I input in here
 
 # Set stream URL
-URL=rtmp://live-fra02.twitch.tv/app/
+URL=rtmp://live-fra02.twitch.tv/app
 
 # Set stream key
 KEY=$1

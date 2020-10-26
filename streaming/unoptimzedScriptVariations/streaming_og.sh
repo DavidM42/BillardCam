@@ -34,7 +34,7 @@ BITRATE=3500000
 
 #TODO multistreaming maybe to yt as well someday?
 # Set stream URL -> will use frankfurt ingest
-URL=rtmp://live-fra02.twitch.tv/app/
+URL=rtmp://live-fra02.twitch.tv/app
 
 # Set stream key
 KEY=$1

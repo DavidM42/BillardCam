@@ -44,7 +44,7 @@ INPUT_RADIO="http://relay.publicdomainradio.org:80/jazz_swing.mp3"
 INPUT_MIC=plughw:CameraB409241,0
 
 # Set stream URL
-URL=rtmp://live-fra02.twitch.tv/app/
+URL=rtmp://live-fra02.twitch.tv/app
 
 # Set stream key
 KEY=$1
