@@ -16,7 +16,7 @@ def stop_streaming(stream_multi_p):
     # got stop magic from https://stackoverflow.com/a/22582602
     stream_multi_p.terminate()
     stream_multi_p.join()
-    return stream_p
+    return stream_multi_p
 
 def start_streaming(stream_multi_p, streaming_start_command):
     # creates a seperate stream process 
