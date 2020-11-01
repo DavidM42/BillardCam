@@ -64,7 +64,7 @@ raspivid -n -o - -t 0 -w $WIDTH -h $HEIGHT -fps $FRAMERATE -b $BITRATE -g $KEYFR
     -thread_queue_size 20480 -f h264 -r 30 -i - \
     -f alsa -thread_queue_size 20480 -ac 2 -itsoffset $OFFSET -i $INPUT -strict experimental -threads 4 \
     -vcodec copy -acodec aac -ac 2 -ar 44100 -ab 128k \
-    -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 15 \
+    -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 30 \
     -f flv "${URL}/${KEY}"
 
 # =================================================================

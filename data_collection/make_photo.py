@@ -33,4 +33,4 @@ def photo_loop():
                 print("Saved play state as image for data collection...")
             # wait 30 seconds so take a pic every half minute
             #TODO make that configurable via config.py
-            time.sleep(30)
+            time.sleep(40)

@@ -37,10 +37,21 @@ BITRATE=3500000
 # OFFSET=0.5
 OFFSET=1.1
 
+
+
 # Set Audio input to online radio stream
-INPUT="http://relay.publicdomainradio.org:80/jazz_swing.mp3"
+#INPUT="http://relay.publicdomainradio.org:80/jazz_swing.mp3"
 # got url from jazz station here http://radio.publicdomainproject.org/
 # m3u file you download contains the real stream url which I input in here
+
+# tried another royalty free jazz station
+# ripped from here https://royaltyfreemusicradio.com/
+# maybe this works with twitch without muting
+INPUT="https://composerconnection.com:8106/stream"
+
+
+# could also stream planet radio the club
+# INPUT="https://mp3.planetradio.de/plrchannels/hqtheclub.aac"
 
 
 #TODO multistreaming maybe to yt as well someday?
@@ -65,7 +76,7 @@ raspivid -n -o - -t 0 -w $WIDTH -h $HEIGHT -fps $FRAMERATE -b $BITRATE -g $KEYFR
     -thread_queue_size 20480 -f h264 -r 30 -i - \
     -thread_queue_size 20480 -ac 2 -itsoffset $OFFSET -i $INPUT -strict experimental -threads 4 \
     -vcodec copy -acodec copy -ac 2 -ar 44100 -ab 128k \
-    -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 15 \
+    -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 30 \
     -f flv "${URL}/${KEY}"
 
 # don_t break connection on spotty internet but keep and reconnect
