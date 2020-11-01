@@ -14,7 +14,6 @@ def stop_streaming(stream_multi_p):
     # stop streaming by emitting sigint which is basically pressing strg+c
     print("Stopping stream...")
     # got stop magic from https://stackoverflow.com/a/22582602
-    stream_multi_p.close()
     stream_multi_p.terminate()
     stream_multi_p.join()
     return stream_multi_p
