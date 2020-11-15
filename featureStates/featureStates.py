@@ -1,6 +1,8 @@
-# TODO config 
-# if internet radio enabled and which
-# if mic is enabled
+import json
+
+class InvalidFeatureUpdateData(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 class FeatureStates:
     def __init__(self):
@@ -17,6 +19,44 @@ class FeatureStates:
         self.changed_features = False
 
     # Have to use getters and setters here because it's used in a multiprocessing manager and this does not allow direct access
+
+    ####### toJSON/fromJSON for web interface modifications #######
+    def toFlagDict(self):
+        return json.dumps({
+            # These keys are basically the labels in web interface
+            "Objekt-Erkennungs-Stream": self.OBJECT_DETECTION_STREAMING,
+            "Daten Sammlung Fotos": self.DATA_COLLECTION,
+            "Shadowplay": self.SHADOWPLAY,
+
+            # DON'T use nested dict for now just keep it simple
+            # because front-end code is lousy
+            "Streaming": self.STREAMING,
+            "Stream-Microphon": self.STREAMING_mic,
+            "Stream-Radio": self.STREAMING_radio
+        })
+
+    def fromFlagDict(self, inDict: dict):
+        try:       
+            # These keys are basically the labels in web interface
+            OBJECT_DETECTION_STREAMING = inDict["Objekt-Erkennungs-Stream"]
+            DATA_COLLECTION = inDict["Daten Sammlung Fotos"]
+            SHADOWPLAY = inDict["Shadowplay"]
+
+            STREAMING = inDict["Streaming"]
+            STREAMING_mic = inDict["Stream-Microphon"]
+            STREAMING_radio = inDict["Stream-Radio"]
+
+            # after all have been tried to get and maybe failed for key error then set all at once
+            self.OBJECT_DETECTION_STREAMING = OBJECT_DETECTION_STREAMING
+            self.DATA_COLLECTION = DATA_COLLECTION
+            self.SHADOWPLAY = SHADOWPLAY
+            self.STREAMING = STREAMING
+            self.STREAMING_mic = STREAMING_mic
+            self.STREAMING_radio = STREAMING_radio
+            self.changed_features = True
+        except Exception as e:
+            # TODO better error message
+            raise InvalidFeatureUpdateData(str(e))
 
     ####### Feature changes marker #######
 

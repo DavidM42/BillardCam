@@ -1,61 +1,33 @@
 {% extends 'base.html' %}
 
 {% block extraCSS %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/ghostButton.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/trafficLight.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ghostButton.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}"> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/trafficLight.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toggle.css') }}">
 {% endblock %}
 
 {% block extraJS %}
-        <script src="{{ url_for('static', filename='js/startSlider.js') }}"> </script>
-        <script src="{{ url_for('static', filename='js/trafficLight.js') }}"> </script>
+    <script src="{{ url_for('static', filename='js/trafficLight.js') }}"> </script>
+    <script src="{{ url_for('static', filename='js/featureChange.js') }}"> </script>
+    <script src="{{ url_for('static', filename='js/formInit.js') }}"> </script>
 {% endblock %}
 
 {% block content %}
 
 <h1 class="headline centeredText" id="headline">
-        Billard Video Steuerung
+    Billardcam Steuerung
 </h1>
 
-<!-- <p class="centeredText queue">Filme in der Warteschlange übrig: {{options_left}}</p> -->
+<!-- <label for="test">Test checkbox</label>
+<input type="checkbox" class="toggle" name="test"> -->
 
-<div class="centeredText">
-        <span>
-        {% if is_stream_running %}
-                <input type="radio" name="traffic-light" class="traffic ready"/>
-                <span class="trafficText">Stream läuft</span>
-        {% else %}
-                <input type="radio" name="traffic-light" class="traffic disconnected"/>
-                <span class="trafficText">Stream läuft nicht</span>
-        {% endif %}
-        </span>
-</div>
+<div id="formBeforeHook"></div>
 
-<div class="centeredText">
-        <span>
-        {% if is_data_collection_running %}
-                <input type="radio" name="traffic-light" class="traffic ready"/>
-                <span class="trafficText">Datensammlung läuft</span>
-        {% else %}
-                <input type="radio" name="traffic-light" class="traffic disconnected"/>
-                <span class="trafficText">Datensammlung läuft nicht</span>
-        {% endif %}
-        </span>
-</div>
-
-<!-- TODO login logout button via session -->
-
-{% if not is_stream_running %}
-    <a class="btn-ghost btn-bright" href=" {{ url_for('start_stream')}}">
-            <!-- TODO confirmation if really sure and not reversible -->
-            <i class="fas fa-satellite-dish"></i> Starte Stream
-    </a>
-{% else %}
-    <a class="btn-ghost btn-bright" href=" {{ url_for('stop_stream')}}">
-        <!-- TODO confirmation if really sure and not reversible -->
-        <i class="fas fa-power-off"></i> Stop stream
-    </a>
-{% endif %}
+<br>
+<a class="btn-ghost btn-bright" href="#" id="saveReload">
+    <i class="fas fa-sync"></i> Save & Reload
+</a>
 <br>
 
 <a class="btn-ghost btn-bright" href=" {{ url_for('clip_it')}}">
@@ -63,24 +35,13 @@
 </a>
 <br>
 
-<!-- Only allow data collection if stream is off -->
-{% if not is_stream_running %}
-        {% if not is_data_collection_running %}
-        <a class="btn-ghost btn-bright" href=" {{ url_for('start_data_collection')}}">
-                <i class="fas fa-camera"></i> Starte Data Collection
-        </a>
-        {% else %}
-        <a class="btn-ghost btn-bright" href=" {{ url_for('stop_data_collection')}}">
-                <i class="fas fa-power-off"></i> Stop Data Collection
-        </a>
-        {% endif %}
-        <br>
-{% endif %}
-
-
 <a class="btn-ghost btn-bright" href=" {{ url_for('logout')}}">
     <i class="fas fa-sign-out-alt"></i> Logout
 </a>
 <br>
+
+<script>
+    var featureStates = JSON.parse('{{ feature_states | safe }}');
+</script>
 
 {% endblock %}

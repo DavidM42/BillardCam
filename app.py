@@ -156,54 +156,28 @@ def restricted(f):
         return f(*args, **kwargs)
     return wrapper
 
-# @app.route("/")
-# def index():
-#     if 'twitch_token' in session:
-#         twitch_token = session["twitch_token"]
-#         response = twitch_api.get_user_info(twitch_token)
-#         #TODO if response {'error': 'Unauthorized', 'status': 401, 'message': 'Invalid OAuth token'} then refresh toke with refresh or relogin
-#         if response and "data" in response and response["data"][0]["id"] == twitch_api.broadcaster_id:
-#             return render_template('index.html',
-#                 is_stream_running = (current_mode == VideoModes.STREAMING),
-#                 is_data_collection_running = (current_mode == VideoModes.DATA_COLLECTION)
-#             ) 
-#         return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in NOT any other one"}), 401
-#     return redirect(url_for('login'))
+@app.route("/")
+def index():
+    if 'twitch_token' in session:
+        twitch_token = session["twitch_token"]
+        response = twitch_api.get_user_info(twitch_token)
+        #TODO if response {'error': 'Unauthorized', 'status': 401, 'message': 'Invalid OAuth token'} then refresh toke with refresh or relogin
+        if response and "data" in response and response["data"][0]["id"] == twitch_api.broadcaster_id:
+            return render_template('index.html',
+                feature_states = feature_states.toFlagDict()
+            ) 
+        return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in NOT any other one"}), 401
+    return redirect(url_for('login'))
 
-# @app.route("/startStream")
-# @restricted
-# def start_stream():
-#     global current_mode
-#     global local_record_p
-#     global stream_multi_p
-#     print("Starting stream")
-
-#     if current_mode != VideoModes.STREAMING:
-#         # stop local recording and start livestreaming
-#         local_record_p = stop_local_recording(local_record_p)
-#         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-#         stream_multi_p = start_streaming(stream_multi_p, streaming_start_command)
-#         current_mode = VideoModes.STREAMING
-#         return jsonify({"status": "Done"})
-#     else:
-#         return jsonify({"status": "error", "message": "Already streaming"}), 400
-
-# @app.route("/stopStream")
-# @restricted
-# def stop_stream():
-#     global current_mode
-#     global local_record_p
-#     global save_local_clip
-#     global stream_multi_p
-
-#     if current_mode == VideoModes.STREAMING:
-#         stop_streaming(stream_multi_p)
-#         current_mode = VideoModes.SHADOWPLAY
-#         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-#         local_record_p = start_local_recording(local_record_p, save_local_clip)
-#         return jsonify({"status": "Done"})
-#     else:
-#         return jsonify({"status": "error", "message": "Stream not running"}), 400
+@app.route("/updateFeatures", methods=['POST'])
+@restricted
+def updateFeatures():
+    print("Updating current features...")
+    try:
+        feature_states.fromFlagDict(request.json)    
+        return jsonify({"status": "Done"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Missing: " + str(e)}), 400
 
 @app.route("/clipit")
 @restricted
@@ -229,44 +203,6 @@ def clip_it():
     else:
         # TODO status code 500 here
         return jsonify({"error": "Neither streaming to twitch nor local recording is active"})
-
-
-# @app.route("/startDataCollection")
-# @restricted
-# def start_data_collection():
-#     global current_mode
-#     global local_record_p
-#     global data_collection_p
-
-#     print("Starting data collection")
-#     print(current_mode != VideoModes.DATA_COLLECTION)
-#     if current_mode != VideoModes.DATA_COLLECTION:
-#         if current_mode != VideoModes.STREAMING:
-#             local_record_p = stop_local_recording(local_record_p)
-#             time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-
-#             data_collection_p = start_data_collection_p(data_collection_p)
-#             current_mode = VideoModes.DATA_COLLECTION
-#             return jsonify({"status": "Done"})
-#         return jsonify({"status": "error", "message": "Streaming must be stopped before activating data collection"}), 400
-#     return jsonify({"status": "error", "message": "Video Mode is already data collection"}), 400
-
-# @app.route("/stopDataCollection")
-# @restricted
-# def stop_data_collection():
-#     global current_mode
-#     global local_record_p
-#     global save_local_clip
-#     global data_collection_p
-
-#     if current_mode == VideoModes.DATA_COLLECTION:
-#         data_collection_p = stop_data_collection_p(data_collection_p)
-#         current_mode = VideoModes.SHADOWPLAY
-#         time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-#         local_record_p = start_local_recording(local_record_p, save_local_clip)
-#         return jsonify({"status": "Done"})
-#     else:
-#         return jsonify({"status": "error", "message": "Data collection not running"}), 400
 
 ############ Start and stop logic ############
 

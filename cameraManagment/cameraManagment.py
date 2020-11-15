@@ -1,5 +1,7 @@
 from picamera import PiCamera
 import ffmpeg
+from picamera.exc import PiCameraNotRecording
+import time
 
 from featureStates.featureStates import FeatureStates
 from cameraManagment.cameraConfiguration import CameraConfiguration
@@ -26,13 +28,34 @@ class CameraManagment:
     
 
     def restart_camera_processing(self):
-        print("Stopping all recording (shadowplay, streaming,...)")
-        self.camera.stop_recording()
-        self.any_video_running = False
+        self.stop_processing()
         self.start_processing()
 
+    def stop_processing(self):
+        print("Stopping all recording (shadowplay, streaming,...)")
+        # TODO write this better less repetitive but equally failsafe
+        try:
+            self.camera.stop_recording(splitter_port=0) # data collection photos
+        except PiCameraNotRecording:
+            pass
+        try:
+            self.camera.stop_recording(splitter_port=1) # shadowplay
+        except PiCameraNotRecording:
+            pass
+        try:
+            self.camera.stop_recording(splitter_port=2) # streaming
+        except PiCameraNotRecording:
+            pass
+        if self.stream_runner_p:
+            # thanks to https://github.com/kkroening/ffmpeg-python/issues/162#issuecomment-571820244
+            # self.stream_runner_p.communicate(str.encode("q")) #Equivalent to send a Q
+            # time.sleep(10) 
+            self.stream_runner_p.terminate()
+            self.stream_runner_p = None
+
+        self.any_video_running = False
+
     def start_processing(self):
-        print("Now starting recording processes...")
         self.start_circular_record()
         self.start_streams()
 
@@ -100,11 +123,12 @@ class CameraManagment:
 
         if stream is not None:
             self.any_video_running = True
-            stream_runner = stream.run_async(pipe_stdin=True)
+            self.stream_runner_p = stream.run_async(pipe_stdin=True)
             print("Starting pushing frames from camera into ffmpeg stream stdin...")
-            self.camera.start_recording(stream_runner.stdin, format='h264', bitrate=self.camera_configuration.get_bitrate(), splitter_port=2) #splitter port to also circular record at same time
+            self.camera.start_recording(self.stream_runner_p.stdin, format='h264', bitrate=self.camera_configuration.get_bitrate(), splitter_port=2) #splitter port to also circular record at same time
         else:
-            print("No streaming active...neither object detection nor online streaming...")
+            pass
+            # print("No streaming active...neither object detection nor online streaming...")
 
     def data_collection_call(self):
         if self.feature_states.get_DATA_COLLECTION():
