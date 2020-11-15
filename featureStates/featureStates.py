@@ -6,14 +6,14 @@ class InvalidFeatureUpdateData(Exception):
 
 class FeatureStates:
     def __init__(self):
-        self.OBJECT_DETECTION_STREAMING = True # default off for network and resource reasons
+        self.OBJECT_DETECTION_STREAMING = False # default off for network and resource reasons
         self.DATA_COLLECTION = False # default is off because almost never needed
 
         self.STREAMING = False # default start with off for privacy and network reasons
         self.STREAMING_mic = False
         self.STREAMING_radio = True
 
-        self.SHADOWPLAY = False
+        self.SHADOWPLAY = True
         self.shadowplay_request = False
 
         self.changed_features = False
