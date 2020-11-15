@@ -6,6 +6,9 @@ imageStates/**.jpg
 imageStates/**.png
 imageStates/annotated/**.jpg
 imageStates/annotated/**.png
+imageStates/TO_ANNOTATE/**.jpg
+
+wip/
 
 venv/
 *.pyc
