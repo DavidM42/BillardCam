@@ -17,11 +17,12 @@ class CameraManagment:
         self.camera_configuration = camera_configuration
 
         self.any_video_running = False
+        self.stream_runner_p = None
         self.camera = PiCamera()
         self.camera.resolution = self.camera_configuration.get_resolution()
 
-        # TODO check if that is okay
-        self.camera.exposure_mode = 'sports' #TODO find right one
+        # TODO faster shutter but colors inacurate and maybe stream delayed
+        #self.camera.exposure_mode = 'sports' #TODO find right one
 
         print("Initially starting up camera data processing....")
         self.start_processing()
@@ -46,7 +47,7 @@ class CameraManagment:
             self.camera.stop_recording(splitter_port=2) # streaming
         except PiCameraNotRecording:
             pass
-        if self.stream_runner_p:
+        if self.stream_runner_p is not None:
             # thanks to https://github.com/kkroening/ffmpeg-python/issues/162#issuecomment-571820244
             # self.stream_runner_p.communicate(str.encode("q")) #Equivalent to send a Q
             # time.sleep(10) 
