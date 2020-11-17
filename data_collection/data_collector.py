@@ -6,7 +6,7 @@ import datetime
 import shutil
 
 #TODO make that configurable via config.py
-PHOTO_DELAY = 40
+PHOTO_DELAY = 25
 
 # TODO get this from app.py passend into here maybe
 abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/../imageStates/" # from base project use shots folder for recordings

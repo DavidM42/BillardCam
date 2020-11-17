@@ -37,15 +37,15 @@ class CameraManagment:
         # TODO write this better less repetitive but equally failsafe
         try:
             self.camera.stop_recording(splitter_port=0) # data collection photos
-        except PiCameraNotRecording:
+        except (PiCameraNotRecording, BrokenPipeError):
             pass
         try:
             self.camera.stop_recording(splitter_port=1) # shadowplay
-        except PiCameraNotRecording:
+        except (PiCameraNotRecording, BrokenPipeError):
             pass
         try:
             self.camera.stop_recording(splitter_port=2) # streaming
-        except PiCameraNotRecording:
+        except (PiCameraNotRecording, BrokenPipeError):
             pass
         if self.stream_runner_p is not None:
             # thanks to https://github.com/kkroening/ffmpeg-python/issues/162#issuecomment-571820244

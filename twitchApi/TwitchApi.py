@@ -31,15 +31,16 @@ class TwitchApi():
                 json.dump(data, outfile)
         
     def read_tokens(self):
-        with open(FILE_PATH, "r") as json_file:
-            try:
-                data = json.load(json_file)
-                if data and data["refresh_token"] and data["access_token"]:
-                    self.access_token = data["access_token"]
-                    self.refresh_token = data["refresh_token"]
-            except JSONDecodeError as e:
-                print("No previous valid tokens")
-                print(e)
+        if os.path.isfile(FILE_PATH):
+            with open(FILE_PATH, "r") as json_file:
+                try:
+                    data = json.load(json_file)
+                    if data and data["refresh_token"] and data["access_token"]:
+                        self.access_token = data["access_token"]
+                        self.refresh_token = data["refresh_token"]
+                except JSONDecodeError as e:
+                    print("No previous valid tokens")
+                    print(e)
 
     def check_token_caching(self, access_token: str, refresh_token: str):
         previous_access_token = self.access_token
@@ -123,6 +124,7 @@ class TwitchApi():
         return json.loads(r.text)
 
     def create_clip(self) -> dict:
+        print('Request to create twitch clip received...')
         # if token became invalid try to refresh it
         if not self.validate_access_token(self.access_token):
             self.refresh_access_token()

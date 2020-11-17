@@ -149,9 +149,9 @@ def restricted(f):
     def wrapper(*args, **kwargs):
         request_api_key = request.args.get('apikey', type = str)
         is_broadcaster = twitch_api.session_is_broadcaster(session)
-        correct_stream_key = request_api_key == api_key
+        correct_api_key = request_api_key == api_key
 
-        if not correct_stream_key and not is_broadcaster:
+        if not correct_api_key and not is_broadcaster:
             return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in or correct apikey given in query string"}), 401
         return f(*args, **kwargs)
     return wrapper
@@ -203,6 +203,14 @@ def clip_it():
     else:
         # TODO status code 500 here
         return jsonify({"error": "Neither streaming to twitch nor local recording is active"})
+
+@app.route("/twitchUser")
+def twitch_user_info():
+    if 'twitch_token' in session:
+        twitch_token = session["twitch_token"]
+        response = twitch_api.get_user_info(twitch_token)
+        return jsonify(response)
+    return redirect(url_for('login'))
 
 ############ Start and stop logic ############
 
