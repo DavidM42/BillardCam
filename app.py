@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, jsonify, request, session, render_template
-from flask_oauthlib.client import OAuth
+from flask_oauthlib.client import OAuth, OAuthException
 from functools import wraps
 import os
 import atexit
@@ -119,18 +119,24 @@ def login():
 
 @app.route('/login/twitch/authorized')
 def authorized():
-    resp = twitch.authorized_response()
-    if resp is None:
-        return 'Access denied: reason=%s error=%s' % (
-            request.args['error'],
-            request.args['error_description']
-        )
-    access_token = resp['access_token'] # get token and save into session for now
-    refresh_token = resp['refresh_token']
-    twitch_api.check_token_caching(access_token, refresh_token)
-    session['twitch_token'] = access_token
-    # return jsonify(twitch_api.get_user_info()) #other return like control page?
-    return redirect(url_for('index'))
+    try:
+        resp = twitch.authorized_response()
+        if resp is None:
+            return 'Access denied: reason=%s error=%s' % (
+                request.args['error'],
+                request.args['error_description']
+            )
+        access_token = resp['access_token'] # get token and save into session for now
+        refresh_token = resp['refresh_token']
+        twitch_api.check_token_caching(access_token, refresh_token)
+        session['twitch_token'] = access_token
+        # return jsonify(twitch_api.get_user_info()) #other return like control page?
+        return redirect(url_for('index'))
+    except OAuthException:
+        print("Invalid Oauth exception from twitch")
+        # trying login again
+        # maybe error better
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
