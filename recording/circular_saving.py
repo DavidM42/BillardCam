@@ -26,6 +26,9 @@ def save_local_buffer(camera, buffer_stream):
     # UTC to ISO 8601 with Local TimeZone information without microsecond  from https://stackoverflow.com/a/28147286
     final_file_name = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat() + ".mp4"
 
+    # : illegal character in filenames so replace that
+    final_file_name = final_file_name.replace(':', '_')
+
     os.system("MP4Box -add " +  stream_save + " " + abs_dirname + final_file_name)
     os.system("rm " + stream_save)
     print("Saved video locally...")
