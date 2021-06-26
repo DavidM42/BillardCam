@@ -1,3 +1,7 @@
-picamera
+# web server
 flask
 Flask-OAuthlib
+
+# camera, streaming,...
+picamera
+ffmpeg-python

@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, jsonify, request, session, render_template
-from flask_oauthlib.client import OAuth
+from flask_oauthlib.client import OAuth, OAuthException
 from functools import wraps
 import os
 import atexit
@@ -8,18 +8,20 @@ from multiprocessing import Process, Value
 import time
 import requests
 import json
-from enum import Enum
 
-from streaming.stream_process_control import start_streaming,stop_streaming
-from data_collection.data_collection_process_control import start_data_collection_p, stop_data_collection_p
-from recording.recording_process_control import start_local_recording, stop_local_recording
-from recording.circular_saving import trigger_local_clip
+# concurrency stuff
+import multiprocessing
+from multiprocessing.managers import BaseManager
+
+
+from cameraManagment.processControl import start_camera_managment, stop_camera_managment
+from cameraManagment.cameraConfiguration import CameraConfiguration
+
+from recording.circular_saving import save_local_buffer
+from data_collection.data_collector import check_make_photo
 from twitchApi.TwitchApi import TwitchApi 
+from featureStates.featureStates import FeatureStates
 
-class VideoModes(Enum):
-    STREAMING = 1
-    SHADOWPLAY = 2
-    DATA_COLLECTION = 3
 
 ############ CONFIGURATION LOADING ############
 from config import configuration
@@ -29,7 +31,12 @@ api_key = configuration["api_key"]
 
 # for streaming 
 stream_key = configuration["stream_key"]
-stream_start_file = configuration["stream_start_file"]
+stream_ingest_url = configuration["stream_ingest_url"]
+mic_input = configuration["mic_input"]
+radio_url = configuration["radio_url"]
+
+# for stream to ml analyzer
+ml_stream_url = configuration["ml_stream_url"]
 
 # twitch api
 client_id = configuration["client_id"]
@@ -37,15 +44,15 @@ client_secret = configuration["client_secret"]
 broadcaster_id = configuration["broadcaster_id"]
 secret_key = configuration["secret_key"]
 
-# global var to indicate camera mode -> init with shadowplay mode
-current_mode = VideoModes.SHADOWPLAY
-
 class ConfigrationException(Exception):
     pass
 
 if not api_key \
     or not stream_key \
-    or not stream_start_file \
+    or not stream_ingest_url \
+    or not mic_input \
+    or not radio_url \
+    or not ml_stream_url \
     or not client_id \
     or not client_secret \
     or not broadcaster_id \
@@ -53,12 +60,34 @@ if not api_key \
     # TODO maybe more info what is missing and so on
     raise ConfigrationException
 
+
+############ Multiprocessing manager for shared objects ############
+
+# setup manager for multiprocessing data coordination
+class DataManager(BaseManager):
+    pass
+
+DataManager.register('FeatureStates', FeatureStates)
+DataManager.register('CameraConfiguration', CameraConfiguration)
+manager = DataManager()
+manager.start()
+
+feature_states = manager.FeatureStates() # pylint: disable=no-member
+camera_configuration = manager.CameraConfiguration(stream_ingest_url, stream_key, ml_stream_url, mic_input, radio_url) # pylint: disable=no-member
+
+############ Start camera manager instance to manage all the recording ############
+
+camera_manager_p = start_camera_managment(feature_states, camera_configuration)
+
 ############ APP itself and OAuth setup ############
 
 # TODO favicon for app and maybe pwa manifest.json
 
 app = Flask(__name__)
 app.secret_key = secret_key
+
+# TODO via config py and fix this
+#app.config['SERVER_NAME'] = "https://billard.merzlabs.de"
 
 oauth = OAuth()
 
@@ -76,27 +105,6 @@ twitch = oauth.remote_app('twitch',
 
 twitch_api = TwitchApi(client_id, client_secret, twitch.base_url , broadcaster_id)
 
-############ Paths for streaming and so on ############
-
-abs_dirname = os.path.dirname(os.path.abspath(__file__)) + "/"
-
-abs_streaming_dir_path = abs_dirname + "streaming/"
-#  appends stream key and also mutes all output and puts into bg to not fill up buffer and hang see https://stackoverflow.com/a/16527559
-# also stop output in stream_optim.sh and in stream process control subprocess open definition
-streaming_start_command = abs_streaming_dir_path + stream_start_file + " " + stream_key # + ' > /dev/null 2>&1 < /dev/null' # was experiment to pipe stdin from stackoverflow to avoid hangups of ffmpeg
-streaming_start_command = shlex.split(streaming_start_command)
-
-############ Global Vars ############
-# global var containing process to record locally
-# get's termianted for streaming
-local_record_p = None
-stream_multi_p = None
-data_collection_p = None
-
-# global var to indicate if a local clip should be created
-# use Value class here because shared memory 'b' binary value 
-# see https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes
-save_local_clip = Value('b', False)
 
 ############ Routes ############
 
@@ -105,22 +113,30 @@ save_local_clip = Value('b', False)
 # @app.route('/login/twitch')
 @app.route('/login')
 def login():
-    return twitch.authorize(callback=url_for('authorized', _external=True))
+    # TODO FIX
+    # return twitch.authorize(callback=url_for('authorized', _external=True))
+    return twitch.authorize(callback="https://billard.merzlabs.de/login/twitch/authorized")
 
 @app.route('/login/twitch/authorized')
 def authorized():
-    resp = twitch.authorized_response()
-    if resp is None:
-        return 'Access denied: reason=%s error=%s' % (
-            request.args['error'],
-            request.args['error_description']
-        )
-    access_token = resp['access_token'] # get token and save into session for now
-    refresh_token = resp['refresh_token']
-    twitch_api.check_token_caching(access_token, refresh_token)
-    session['twitch_token'] = access_token
-    # return jsonify(twitch_api.get_user_info()) #other return like control page?
-    return redirect(url_for('index'))
+    try:
+        resp = twitch.authorized_response()
+        if resp is None:
+            return 'Access denied: reason=%s error=%s' % (
+                request.args['error'],
+                request.args['error_description']
+            )
+        access_token = resp['access_token'] # get token and save into session for now
+        refresh_token = resp['refresh_token']
+        twitch_api.check_token_caching(access_token, refresh_token)
+        session['twitch_token'] = access_token
+        # return jsonify(twitch_api.get_user_info()) #other return like control page?
+        return redirect(url_for('index'))
+    except OAuthException:
+        print("Invalid Oauth exception from twitch")
+        # trying login again
+        # maybe error better
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
@@ -139,14 +155,13 @@ def restricted(f):
     def wrapper(*args, **kwargs):
         request_api_key = request.args.get('apikey', type = str)
         is_broadcaster = twitch_api.session_is_broadcaster(session)
-        correct_stream_key = request_api_key == api_key
+        correct_api_key = request_api_key == api_key
 
-        if not correct_stream_key and not is_broadcaster:
+        if not correct_api_key and not is_broadcaster:
             return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in or correct apikey given in query string"}), 401
         return f(*args, **kwargs)
     return wrapper
 
-# TODO html render website
 @app.route("/")
 def index():
     if 'twitch_token' in session:
@@ -155,117 +170,63 @@ def index():
         #TODO if response {'error': 'Unauthorized', 'status': 401, 'message': 'Invalid OAuth token'} then refresh toke with refresh or relogin
         if response and "data" in response and response["data"][0]["id"] == twitch_api.broadcaster_id:
             return render_template('index.html',
-                is_stream_running = (current_mode == VideoModes.STREAMING),
-                is_data_collection_running = (current_mode == VideoModes.DATA_COLLECTION)
+                feature_states = feature_states.toFlagDict()
             ) 
         return jsonify({"status": "error", "message": "Unauthorized. Twitch account of broadcaster must be logged in NOT any other one"}), 401
     return redirect(url_for('login'))
 
-@app.route("/startStream")
+@app.route("/updateFeatures", methods=['POST'])
 @restricted
-def start_stream():
-    global current_mode
-    global local_record_p
-    global stream_multi_p
-    print("Starting stream")
-
-    if current_mode != VideoModes.STREAMING:
-        # stop local recording and start livestreaming
-        local_record_p = stop_local_recording(local_record_p)
-        time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-        stream_multi_p = start_streaming(stream_multi_p, streaming_start_command)
-        current_mode = VideoModes.STREAMING
+def updateFeatures():
+    print("Updating current features...")
+    try:
+        feature_states.fromFlagDict(request.json)    
         return jsonify({"status": "Done"})
-    else:
-        return jsonify({"status": "error", "message": "Already streaming"}), 400
-
-@app.route("/stopStream")
-@restricted
-def stop_stream():
-    global current_mode
-    global local_record_p
-    global save_local_clip
-    global stream_multi_p
-
-    if current_mode == VideoModes.STREAMING:
-        stop_streaming(stream_multi_p)
-        current_mode = VideoModes.SHADOWPLAY
-        time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-        local_record_p = start_local_recording(local_record_p, save_local_clip)
-        return jsonify({"status": "Done"})
-    else:
-        return jsonify({"status": "error", "message": "Stream not running"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Missing: " + str(e)}), 400
 
 @app.route("/clipit")
 @restricted
 def clip_it():
-    global current_mode
-    global save_local_clip
+    global feature_states
 
-    if current_mode == VideoModes.STREAMING:
+    if feature_states.get_STREAMING()[0] and feature_states.get_SHADOWPLAY():
+        # make request for local shadowplay
+        feature_states.set_shadowplay_request(True)
+
+        # also make twitch clip
         response = twitch_api.create_clip()
-        return jsonify(response)
-        # return jsonify({"status": "Saved on twitch"})
-    else:
-        trigger_local_clip(save_local_clip)
+        return jsonify({"status": "Saved locally and to twitch", "twitchResponse": response})
+
+    elif feature_states.get_SHADOWPLAY():
+        feature_states.set_shadowplay_request(True)
         return jsonify({"status": "Locally saved"})
 
+    elif feature_states.get_STREAMING()[0]:
+        response = twitch_api.create_clip()
+        return jsonify({"status": "Saved to twitch", "twitchResponse": response})
 
-@app.route("/startDataCollection")
-@restricted
-def start_data_collection():
-    global current_mode
-    global local_record_p
-    global data_collection_p
-
-    print("Starting data collection")
-    print(current_mode != VideoModes.DATA_COLLECTION)
-    if current_mode != VideoModes.DATA_COLLECTION:
-        if current_mode != VideoModes.STREAMING:
-            local_record_p = stop_local_recording(local_record_p)
-            time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-
-            data_collection_p = start_data_collection_p(data_collection_p)
-            current_mode = VideoModes.DATA_COLLECTION
-            return jsonify({"status": "Done"})
-        return jsonify({"status": "error", "message": "Streaming must be stopped before activating data collection"}), 400
-    return jsonify({"status": "error", "message": "Video Mode is already data collection"}), 400
-
-@app.route("/stopDataCollection")
-@restricted
-def stop_data_collection():
-    global current_mode
-    global local_record_p
-    global save_local_clip
-    global data_collection_p
-
-    if current_mode == VideoModes.DATA_COLLECTION:
-        data_collection_p = stop_data_collection_p(data_collection_p)
-        current_mode = VideoModes.SHADOWPLAY
-        time.sleep(2) # 2 seconds to really terminate and allow hardware access by other processes
-        local_record_p = start_local_recording(local_record_p, save_local_clip)
-        return jsonify({"status": "Done"})
     else:
-        return jsonify({"status": "error", "message": "Data collection not running"}), 400
+        # TODO status code 500 here
+        return jsonify({"error": "Neither streaming to twitch nor local recording is active"})
+
+@app.route("/twitchUser")
+def twitch_user_info():
+    if 'twitch_token' in session:
+        twitch_token = session["twitch_token"]
+        response = twitch_api.get_user_info(twitch_token)
+        return jsonify(response)
+    return redirect(url_for('login'))
 
 ############ Start and stop logic ############
 
 def exit_handler():
-    print("Cleaning up all recording processes and exiting")
+    print("Cleaning up all processes and exiting...")
     # always make a clean exit and terminate both streaming and local recording processes
-    if current_mode == VideoModes.STREAMING:
-        # always stop streaming if file ends (and power is not cut...)
-        stop_streaming(stream_multi_p)
-    elif current_mode == VideoModes.SHADOWPLAY:
-        # else stop local recording
-        stop_local_recording(local_record_p)
-    elif current_mode == VideoModes.DATA_COLLECTION:
-        stop_data_collection_p(data_collection_p)
+    stop_camera_managment(camera_manager_p)
 
 if __name__ == "__main__":
     atexit.register(exit_handler)
 
-    if current_mode == VideoModes.SHADOWPLAY:
-        local_record_p = start_local_recording(local_record_p, save_local_clip)
     # TODO make port config var
     app.run(debug=True, port=8888, host="0.0.0.0", use_reloader=False)

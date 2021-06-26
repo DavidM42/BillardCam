@@ -1,8 +1,15 @@
 configuration = {
     # config to stream content to twitch 
     'api_key' : 'XXXXXXXX', #Your own api_key to restrict api usage
+    'stream_ingest_url': 'rtmp://live-fra02.twitch.tv/app/', # ingest server url of your streaming provider like twitch or yt
     'stream_key' : 'live_XXXXXXXX', # stream key for twitch
-    'stream_start_file' : 'streaming_og.sh',
+
+    # audio configuration for stream
+    'mic_input': 'plughw:CameraB1337,0', # microphone input (check using "arecord -l")
+    'radio_url': 'https://example.com/stream', # internet radio station stream to stream
+
+    # config for machine learning backend device
+    'ml_stream_url': 'rtsp://192.168.178.2:8554/myDevice',
 
     # config for twitch api to clip
     'client_id' : 'XXXXXXX',
