@@ -1,11 +1,14 @@
 config.py
 twitchApi/tokens.json
 
+shots/
 shots/*.mp4
+imageStates/
 imageStates/**.jpg
 imageStates/**.png
 imageStates/annotated/**.jpg
 imageStates/annotated/**.png
+wip/
 
 venv/
 *.pyc
