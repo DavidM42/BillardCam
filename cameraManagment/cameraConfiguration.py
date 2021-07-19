@@ -8,9 +8,17 @@ class CameraConfiguration:
         self.shadowplay_time = 50
         # working with double stream as far as I see
         #BITRATE = 2500000
+
         self.bitrate = 2800000
-        self.resolution_width = 1920
-        self.resolution_height = 1080
+        #self.resolution_width = 1920
+        #self.resolution_height = 1080
+        self.framerate = 30
+
+        #self.bitrate = 3500000
+        #self.bitrate = 1400000
+        self.resolution_width = 1280
+        self.resolution_height = 720
+        #self.framerate = 60
 
         self.mic_input = mic_input
         self.radio_url = radio_url
@@ -29,6 +37,9 @@ class CameraConfiguration:
 
     def get_resolution(self):
         return (self.resolution_width, self.resolution_height)
+
+    def get_framerate(self):
+        return self.framerate
 
     def get_mic_input(self):
         return self.mic_input

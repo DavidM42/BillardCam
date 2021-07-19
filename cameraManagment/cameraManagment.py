@@ -9,7 +9,9 @@ from recording.circular_saving import start_buffer_recording, save_local_buffer
 from data_collection.data_collector import check_make_photo
 
 RADIO_OFFSET = 1.1
-MIC_OFFSET = 1.1
+
+# not needed anymore synced it
+# MIC_OFFSET = 0
 
 class CameraManagment:
     def __init__(self, feature_states: FeatureStates, camera_configuration: CameraConfiguration):
@@ -18,7 +20,7 @@ class CameraManagment:
 
         self.any_video_running = False
         self.stream_runner_p = None
-        self.camera = PiCamera()
+        self.camera = PiCamera(framerate=self.camera_configuration.get_framerate())
         self.camera.resolution = self.camera_configuration.get_resolution()
 
         # TODO faster shutter but colors inacurate and maybe stream delayed
@@ -69,15 +71,19 @@ class CameraManagment:
 
     def start_streams(self):
         # base source of video of camera
-        source = ffmpeg.input('pipe:', format='h264', **{'r': 30, 'thread_queue_size': 20480})
-        
+        # video was too late and after audio
+        # fixed via nobuffer making video earlier https://stackoverflow.com/a/49273163
+        source = ffmpeg.input('pipe:', format='h264', **{'r': self.camera_configuration.get_framerate(), 'thread_queue_size': 20480,  'fflags': 'nobuffer'})  
+
         audio = None
         if self.feature_states.get_STREAMING()[1]:
             # mic should be active
-            audio = ffmpeg.input(self.camera_configuration.get_mic_input(), format='alsa', **{'ac': 2, 'itsoffset': MIC_OFFSET , 'thread_queue_size': 20480})
+            # using nobuffer for same low latency as video
+            # then applying async methods as in https://lzone.de/blog/Easily-fix-async-video-with-ffmpeg to sync audio to video
+            audio = ffmpeg.input(self.camera_configuration.get_mic_input(), format='alsa', **{'ac': 1,"c:a": "pcm_s24le", "sample_rate": 192000, 'thread_queue_size': 20480, 'fflags': 'nobuffer', 'async': 1}) # reduce latency with no buffer then sync to video via async 1 # not needed and inacurate because changes 'itsoffset': MIC_OFFSET
         elif self.feature_states.get_STREAMING()[2]:
             # radio should be active    
-            audio = ffmpeg.input(self.camera_configuration.get_radio_url(), **{'ac': 2, 'itsoffset': MIC_OFFSET , 'thread_queue_size': 20480})
+            audio = ffmpeg.input(self.camera_configuration.get_radio_url(), **{'ac': 2, 'itsoffset': RADIO_OFFSET , 'thread_queue_size': 20480})
         
         # only video no audio to ml stream
         ml_output_stream = source.output(self.camera_configuration.get_object_recognition_stream_url(), format='rtsp',
@@ -95,10 +101,12 @@ class CameraManagment:
             # see these for audio implementation details since docs suck
             # https://github.com/kkroening/ffmpeg-python/issues/26
             # https://github.com/kkroening/ffmpeg-python/pull/45#issue-159702983
-            streaming_output = ffmpeg.output(source,audio, stream_url, format='flv',
+            streaming_output = ffmpeg.output(source, audio, stream_url, format='flv',
                 **{
-                    'threads': 2,
-                    'acodec': 'aac', 'ac': 2, 'ar': 44100, 'ab': '128k',
+                    'threads': 3,
+                    # audio high low filter here to reduce usb mic noise floor, then boost then normalize audio too
+                    # afftdn noise reduction filter seems to be problem and too much making stream unstable  # ,afftdn
+                    'acodec': 'aac', 'ac': 1, 'ar': 44100, 'ab': '128k', 'af': 'highpass=200,lowpass=2100,volume=4,loudnorm', 
                     'vcodec':'copy',
                     'reconnect': 1,'reconnect_at_eof': 1, 'reconnect_streamed': 1, 'reconnect_delay_max': 30 
                 }
@@ -106,7 +114,7 @@ class CameraManagment:
         else:
             streaming_output = ffmpeg.output(source, stream_url, format='flv',
                 **{
-                    'threads': 2,
+                    'threads': 3,
                     # -acodec aac -ac 2 -ar 44100 -ab 128k
                     'vcodec':'copy',
                     'reconnect': 1,'reconnect_at_eof': 1, 'reconnect_streamed': 1, 'reconnect_delay_max': 30 
@@ -155,3 +163,6 @@ def camera_manager_loop(feature_states: FeatureStates, camera_configuration: Cam
 
         # also call this every loop to check if photo should be make if data collection is on
         camera_managment.data_collection_call()
+
+        #stop process from keeping cpu busy
+        time.sleep(1)
