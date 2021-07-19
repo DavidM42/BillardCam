@@ -11,9 +11,9 @@ class FeatureStates:
 
         self.STREAMING = False # default start with off for privacy and network reasons
         self.STREAMING_mic = False
-        self.STREAMING_radio = True
+        self.STREAMING_radio = False
 
-        self.SHADOWPLAY = True
+        self.SHADOWPLAY = False
         self.shadowplay_request = False
 
         self.changed_features = False
