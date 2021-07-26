@@ -36,7 +36,6 @@ class CameraManagment:
 
     def stop_processing(self):
         print("Stopping all recording (shadowplay, streaming,...)")
-        # TODO write this better less repetitive but equally failsafe
         try:
             self.camera.stop_recording(splitter_port=0) # data collection photos
         except (PiCameraNotRecording, BrokenPipeError):
@@ -86,16 +85,28 @@ class CameraManagment:
             audio = ffmpeg.input(self.camera_configuration.get_radio_url(), **{'ac': 2, 'itsoffset': RADIO_OFFSET , 'thread_queue_size': 20480})
         
         # only video no audio to ml stream
-        ml_output_stream = source.output(self.camera_configuration.get_object_recognition_stream_url(), format='rtsp',
-            **{
-                'threads': 2,
-                'vcodec':'copy',
-                'reconnect': 1,'reconnect_at_eof': 1, 'reconnect_streamed': 1, 'reconnect_delay_max': 30 
-            }
-        )
+        if audio is not None:
+            ml_output_stream = ffmpeg.output(source, audio, self.camera_configuration.get_object_recognition_stream_url(), format='rtsp',
+                **{
+                    'fflags': 'nobuffer',
+                    'threads': 2,
+                    # copy of normal streaming audio output
+                    'acodec': 'aac', 'ac': 1, 'ar': 44100, 'ab': '128k', 'af': 'highpass=200,lowpass=2100,volume=4,loudnorm',
+                    'vcodec':'copy',
+                    'reconnect': 1,'reconnect_at_eof': 1, 'reconnect_streamed': 1, 'reconnect_delay_max': 30 
+                }
+            )
+        else:
+            ml_output_stream = ffmpeg.output(source, self.camera_configuration.get_object_recognition_stream_url(), format='rtsp',
+                **{
+                    'fflags': 'nobuffer',
+                    'threads': 2,
+                    'vcodec':'copy',
+                    'reconnect': 1,'reconnect_at_eof': 1, 'reconnect_streamed': 1, 'reconnect_delay_max': 30
+                }
+            )
 
-        # TODO remove bandwithtest again after testing
-        stream_url = self.camera_configuration.get_stream_url() #+ '?bandwidthtest=true'
+        stream_url = self.camera_configuration.get_stream_url()
 
         if audio is not None:
             # see these for audio implementation details since docs suck
